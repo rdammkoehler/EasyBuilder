@@ -32,9 +32,9 @@ EasyBuilder establishes a simple DSL for the builder pattern.
 The first step is to create the EasyBuilder instance. To do this, use the
 constructor to specify the target type to be built, e.g.
 
-'''java
+```java
 	new EasyBuilder(SomeClass.class);
-'''
+```
 	
 Once you've created the builder, apply the builder DSL methods to establish the 
 assembly instructions for the target class. Once all of the instructions have 
@@ -42,26 +42,14 @@ been created, call the build() method to assemble the object.
 
 The DSL methods are available;
 ===============================
-
-build() 					Execute all the instructions provided. This should 
-							be the last thing you call.
-bypassConstructor()			Use Objenesis to skip the class constructor, handy 
-							when the constructor has some undesirable 
-							side-effects.
-setField(<field>,<value>)	Sets the value of a field on the target class
-setField(<field>,<value>,<implementing class>)
-							Sets the value of a field on the target class based 
-							on it's defining class
-setFields(<map>)			Sets the values of fields named in the map. The map 
-							is keyed by field name, and the values in the map 
-							are the values to use.
-useAlternateConstructor(Object[])
-							Construct the object using some complex constructor 
-							that accepts the arguments provided. The arguments 
-							should be presented in the same order as the 
-							constructor expects them using the specific types 
-							of the constructors arguments. EasyBuilder will do 
-							the rest.
+| Method                     | Description                                      |
+| ---------------------------|--------------------------------------------------| 
+|build() 					 | Execute all the instructions provided. This should be the last thing you call. |
+|bypassConstructor()		 | Use Objenesis to skip the class constructor, handy when the constructor has some undesirable side-effects. |
+|setField(<field>,<value>)	 | Sets the value of a field on the target class |
+|setField(<field>,<value>,<implementing class>) | Sets the value of a field on the target class based on it's defining class |
+|setFields(<map>)			| Sets the values of fields named in the map. The map is keyed by field name, and the values in the map are the values to use. |
+|useAlternateConstructor(Object[]) | Construct the object using some complex constructor that accepts the arguments provided. The arguments should be presented in the same order as the constructor expects them using the specific types of the constructors arguments. EasyBuilder will do the rest. |
 							
 					 
 Example Usage:
@@ -71,26 +59,26 @@ usage pattern is as follows;
 
 JDK 1.4
 ===============================
-'''java
-		EasyBuilder builder = new EasyBuilder(SomeNonJavaBean.class);
-		builder.builder.bypassConstructor();
-		builder.setField("param1", "someValue");
-		builder.setField("param2", 42);
-		SomeNonJavaBean anotherNonBean = (SomeNonJavaBean) builder.build();
-'''
+```java
+EasyBuilder builder = new EasyBuilder(SomeNonJavaBean.class);
+builder.builder.bypassConstructor();
+builder.setField("param1", "someValue");
+builder.setField("param2", 42);
+SomeNonJavaBean anotherNonBean = (SomeNonJavaBean) builder.build();
+```
 
 JDK 1.5
 ===============================
-'''java
-		EasyBuilder builder = new EasyBuilder(SomeNonJavaBean.class) {
-			{
-				bypassConstructor();
-				setField("param1", "someValue");
-				setField("param2", 42);
-			}
-		};
-		SomeNonJavaBean anotherNonBean = (SomeNonJavaBean) builder.build();
-'''
+```java
+EasyBuilder builder = new EasyBuilder(SomeNonJavaBean.class) {
+	{
+		bypassConstructor();
+		setField("param1", "someValue");
+		setField("param2", 42);
+	}
+};
+SomeNonJavaBean anotherNonBean = (SomeNonJavaBean) builder.build();
+```
 		
 Tracing EasyBuilders Internals:
 ===============================
