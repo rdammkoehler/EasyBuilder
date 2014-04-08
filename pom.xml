@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.googlecode</groupId>
+	<artifactId>easybuilder</artifactId>
+	<packaging>jar</packaging>
+	<name>EasyBuilder</name>
+	<version>1.0</version>
+	<description>http://code.google.com/p/easybuilder/</description>
+	<url>http://code.google.com/p/easybuilder/</url>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>
+				http://www.opensource.org/licenses/mit-license.php
+			</url>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>
+			scm:hg https://easybuilder.googlecode.com/hg/ easybuilder
+		</connection>
+		<url>http://code.google.com/p/easybuilder/source/checkout</url>
+	</scm>
+	<developers>
+		<developer>
+			<id>rdammkoehler</id>
+			<name>Rich Dammkoehler</name>
+			<email>rdammkoehler@gmail.com</email>
+			<url></url>
+			<organization>NOrad Ltd.</organization>
+			<organizationUrl>http://www.noradltd.com</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>-5</timezone>
+			<properties>
+				<picUrl></picUrl>
+			</properties>
+		</developer>
+		<developer>
+			<id>nraychaudhrui</id>
+			<name>Nilanjan Raychaundhrui</name>
+			<email>nraychaudhrui@pillartechnology.com</email>
+			<url></url>
+			<organization>Pillar Technology</organization>
+			<organizationUrl>
+				http://www.pillartechnology.com
+			</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>-4</timezone>
+			<properties>
+				<picUrl></picUrl>
+			</properties>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>Andy Lawrence</name>
+			<email>andy.lawrence@gmail.com</email>
+			<url></url>
+			<roles>
+				<role>contributer</role>
+			</roles>
+			<timezone>-4</timezone>
+			<properties>
+				<gtalk></gtalk>
+			</properties>
+		</contributor>
+	</contributors>
+
+	<build>
+		<resources>
+            <resource>
+                <directory>src/main/aspect</directory>
+            </resource>
+        </resources>
+		<testResources></testResources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.4</source>
+					<target>1.4</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>aspectj-maven-plugin</artifactId>
+				<version>1.2</version>
+				<configuration>
+                    <aspectDirectory>src/main/aspect</aspectDirectory>
+                    <weaveWithAspectsInMainSourceFolder>true</weaveWithAspectsInMainSourceFolder>
+                    <weaveMainSourceFolder>true</weaveMainSourceFolder>
+                </configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>
+							jar-with-dependencies
+						</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.4</version>
+    	    <scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.objenesis</groupId>
+			<artifactId>objenesis</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
+			<version>1.5.4</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.5.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.5.8</version>
+		</dependency>
+	</dependencies>
+	<profiles></profiles>
+</project>
