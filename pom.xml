@@ -4,13 +4,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.googlecode</groupId>
+	<groupId>com.noradltd</groupId>
 	<artifactId>easybuilder</artifactId>
 	<packaging>jar</packaging>
 	<name>EasyBuilder</name>
 	<version>1.0</version>
-	<description>http://code.google.com/p/easybuilder/</description>
-	<url>http://code.google.com/p/easybuilder/</url>
+	<description>A simple Dynamic Builder</description>
 	<licenses>
 		<license>
 			<name>MIT License</name>
@@ -22,9 +21,9 @@
 
 	<scm>
 		<connection>
-			scm:hg https://easybuilder.googlecode.com/hg/ easybuilder
+			scm:git:git@github.com:rdammkoehler/EasyBuilder.git
 		</connection>
-		<url>http://code.google.com/p/easybuilder/source/checkout</url>
+		<url>https://github.com/rdammkoehler/EasyBuilder</url>
 	</scm>
 	<developers>
 		<developer>
@@ -144,4 +143,9 @@
 		</dependency>
 	</dependencies>
 	<profiles></profiles>
+	<url>https://github.com/rdammkoehler/EasyBuilder</url>
+	<organization>
+		<name>NOrad Ltd.</name>
+		<url>http://www.noradltd.com</url>
+	</organization>
 </project>
