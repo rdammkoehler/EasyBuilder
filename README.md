@@ -15,28 +15,33 @@ information. Logging is supported through SLF4J 1.5.8 and uses the
 'Simple Logger' by default. 
 
 Installation:
+===============================
 Add the following jars to your classpath;
-	easybuilder-1.0.jar
-	objenesis-1.1.jar
+-	easybuilder-1.0.jar
+-	objenesis-1.1.jar
 
 Optionally you may include
-	aspectjrt-1.5.4.jar
-	slf4j-api-1.5.8.jar
-	slf4j-simple-1.5.8.jar
+-	aspectjrt-1.5.4.jar
+-	slf4j-api-1.5.8.jar
+-	slf4j-simple-1.5.8.jar
 
 Usage:
+===============================
 EasyBuilder establishes a simple DSL for the builder pattern. 
 
 The first step is to create the EasyBuilder instance. To do this, use the
 constructor to specify the target type to be built, e.g.
 
+'''java
 	new EasyBuilder(SomeClass.class);
+'''
 	
 Once you've created the builder, apply the builder DSL methods to establish the 
 assembly instructions for the target class. Once all of the instructions have 
 been created, call the build() method to assemble the object. 
 
 The DSL methods are available;
+===============================
 
 build() 					Execute all the instructions provided. This should 
 							be the last thing you call.
@@ -60,18 +65,23 @@ useAlternateConstructor(Object[])
 							
 					 
 Example Usage:
+===============================
 Your best examples are in the EasyBuilderTest.java file, however, the simplest 
 usage pattern is as follows;
 
 JDK 1.4
+===============================
+'''java
 		EasyBuilder builder = new EasyBuilder(SomeNonJavaBean.class);
 		builder.builder.bypassConstructor();
 		builder.setField("param1", "someValue");
 		builder.setField("param2", 42);
 		SomeNonJavaBean anotherNonBean = (SomeNonJavaBean) builder.build();
-
+'''
 
 JDK 1.5
+===============================
+'''java
 		EasyBuilder builder = new EasyBuilder(SomeNonJavaBean.class) {
 			{
 				bypassConstructor();
@@ -80,6 +90,8 @@ JDK 1.5
 			}
 		};
 		SomeNonJavaBean anotherNonBean = (SomeNonJavaBean) builder.build();
+'''
 		
 Tracing EasyBuilders Internals:
+===============================
 Using AspectJ you can trace the internal activity of EasyBuilder. 
