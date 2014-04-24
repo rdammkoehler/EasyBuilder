@@ -23,14 +23,19 @@ THE SOFTWARE.
  */
 package com.noradltd.easybuilder;
 
-import java.util.*;
 import java.lang.reflect.Field;
-
-import com.noradltd.easybuilder.EasyBuilder;
-import com.noradltd.easybuilder.EasyBuilder.InstantiateInstruction;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+
+import com.noradltd.easybuilder.EasyBuilder.InstantiateInstruction;
 
 /**
  * @author Nilanjan Raychaundhrui, nraychaudhrui@pillartechnology.com
