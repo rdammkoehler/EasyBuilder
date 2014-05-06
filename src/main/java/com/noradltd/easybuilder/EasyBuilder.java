@@ -23,16 +23,19 @@ THE SOFTWARE.
  */
 package com.noradltd.easybuilder;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.objenesis.Objenesis;
 import org.objenesis.ObjenesisStd;
 import org.objenesis.instantiator.ObjectInstantiator;
-
-import java.util.*;
 
 /**
  * Please note that this initial version of EasyBuilder is intended to function
@@ -47,7 +50,7 @@ public class EasyBuilder {
 	/**
 	 * The target class to be built.
 	 */
-	private Class clazz;
+	private Class<?> clazz;
 
 	/**
 	 * The instance of the class being built. This may be removed later, see
@@ -59,7 +62,7 @@ public class EasyBuilder {
 	 * A list of instructions used to assemble the an instance of the class
 	 * being built.
 	 */
-	private List assemblyInstructions = new ArrayList();
+	private List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 
 	/**
 	 * Accumulates the number of instances of Instructions, used to preserve
@@ -74,7 +77,7 @@ public class EasyBuilder {
 	 * @param clazz_p
 	 *            The class to be built.
 	 */
-	public EasyBuilder(Class clazz_p) {
+	public EasyBuilder(Class<?> clazz_p) {
 		clazz = clazz_p;
 		addInstruction(new BasicInstantiateInstruction());
 	}
@@ -96,9 +99,9 @@ public class EasyBuilder {
 	 */
 	private Object assembleObject() {
 		preCompile();
-		Iterator itr = assemblyInstructions.iterator();
+		Iterator<AssemblyInstruction> itr = assemblyInstructions.iterator();
 		while (itr.hasNext()) {
-			AssemblyInstruction instruction = (AssemblyInstruction) itr.next();
+			AssemblyInstruction instruction = itr.next();
 			instruction.invoke(this);
 		}
 		return instance;
@@ -134,8 +137,8 @@ public class EasyBuilder {
 	 * @return If params is null, zero length Class[], otherwise a Class[]
 	 *         representing the types of the objects in the array
 	 */
-	private Class[] getParamTypes(Object[] params) {
-		Class[] types;
+	private Class<?>[] getParamTypes(Object[] params) {
+		Class<?>[] types;
 		if (params == null) {
 			types = new Class[0];
 		} else {
@@ -149,7 +152,7 @@ public class EasyBuilder {
 		return types;
 	}
 
-	// @Override java.lang.Object
+	@Override
 	public String toString() {
 		return new StringBuilder("EasyBuilder[").append("target::").append(clazz.getName()).append(", instructions::").append(assemblyInstructions).append("]")
 				.toString();
@@ -208,7 +211,7 @@ public class EasyBuilder {
 	 *            The impelementing class of the field
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setField(String fieldName, Object value, Class clazz) {
+	public EasyBuilder setField(String fieldName, Object value, Class<?> clazz) {
 		addInstruction(new SetPrivateFieldInstruction(fieldName, value, clazz));
 		return this;
 	}
@@ -238,7 +241,7 @@ public class EasyBuilder {
 	 *            The impelementing class of the field
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setField(String fieldName, char value, Class clazz) {
+	public EasyBuilder setField(String fieldName, char value, Class<?> clazz) {
 		addInstruction(new SetPrivateFieldInstruction(fieldName, value, clazz));
 		return this;
 	}
@@ -268,7 +271,7 @@ public class EasyBuilder {
 	 *            The impelementing class of the field
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setField(String fieldName, byte value, Class clazz) {
+	public EasyBuilder setField(String fieldName, byte value, Class<?> clazz) {
 		addInstruction(new SetPrivateFieldInstruction(fieldName, value, clazz));
 		return this;
 	}
@@ -298,7 +301,7 @@ public class EasyBuilder {
 	 *            The impelementing class of the field
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setField(String fieldName, short value, Class clazz) {
+	public EasyBuilder setField(String fieldName, short value, Class<?> clazz) {
 		addInstruction(new SetPrivateFieldInstruction(fieldName, value, clazz));
 		return this;
 	}
@@ -328,7 +331,7 @@ public class EasyBuilder {
 	 *            The impelementing class of the field
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setField(String fieldName, int value, Class clazz) {
+	public EasyBuilder setField(String fieldName, int value, Class<?> clazz) {
 		addInstruction(new SetPrivateFieldInstruction(fieldName, value, clazz));
 		return this;
 	}
@@ -358,7 +361,7 @@ public class EasyBuilder {
 	 *            The impelementing class of the field
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setField(String fieldName, long value, Class clazz) {
+	public EasyBuilder setField(String fieldName, long value, Class<?> clazz) {
 		addInstruction(new SetPrivateFieldInstruction(fieldName, value, clazz));
 		return this;
 	}
@@ -388,7 +391,7 @@ public class EasyBuilder {
 	 *            The impelementing class of the field
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setField(String fieldName, float value, Class clazz) {
+	public EasyBuilder setField(String fieldName, float value, Class<?> clazz) {
 		addInstruction(new SetPrivateFieldInstruction(fieldName, value, clazz));
 		return this;
 	}
@@ -418,7 +421,7 @@ public class EasyBuilder {
 	 *            The impelementing class of the field
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setField(String fieldName, double value, Class clazz) {
+	public EasyBuilder setField(String fieldName, double value, Class<?> clazz) {
 		addInstruction(new SetPrivateFieldInstruction(fieldName, value, clazz));
 		return this;
 	}
@@ -448,7 +451,7 @@ public class EasyBuilder {
 	 *            The impelementing class of the field
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setField(String fieldName, boolean value, Class clazz) {
+	public EasyBuilder setField(String fieldName, boolean value, Class<?> clazz) {
 		addInstruction(new SetPrivateFieldInstruction(fieldName, value, clazz));
 		return this;
 	}
@@ -461,10 +464,10 @@ public class EasyBuilder {
 	 *            A map keyed by field name of values to set
 	 * @return An instance of the EasyBuilder, this allows chained-calls.
 	 */
-	public EasyBuilder setFields(Map fieldMap) {
-		Iterator itr = fieldMap.entrySet().iterator();
+	public EasyBuilder setFields(Map<String, Object> fieldMap) {
+		Iterator<Map.Entry<String, Object>> itr = fieldMap.entrySet().iterator();
 		while (itr.hasNext()) {
-			Map.Entry entry = (Map.Entry) itr.next();
+			Map.Entry<String,Object> entry = itr.next();
 			addInstruction(new SetFieldInstruction((String) entry.getKey(), entry.getValue()));
 		}
 		return this;
@@ -509,7 +512,7 @@ public class EasyBuilder {
 	 * Represents an assembly instruction in the process of building an instance
 	 * of the class to be built.
 	 */
-	interface AssemblyInstruction extends Comparable {
+	interface AssemblyInstruction extends Comparable<Object> {
 		void invoke(EasyBuilder builder);
 	}
 
@@ -574,7 +577,7 @@ public class EasyBuilder {
 			}
 		}
 
-		// @java.lang.Override
+		// @Override
 		public String toString() {
 			return new StringBuffer("BasicInstantiate[sequenceId::").append(sequenceId).append("]").toString();
 		}
@@ -603,9 +606,9 @@ public class EasyBuilder {
 		 * @return An uninitialized instance of the class being built, even the
 		 *         constructor was bypassed.
 		 */
-		private Object createInstance(Class clazz) {
+		private Object createInstance(Class<?> clazz) {
 			Objenesis objenesis = new ObjenesisStd();
-			ObjectInstantiator thingyInstantiator = objenesis.getInstantiatorOf(clazz);
+			ObjectInstantiator<?> thingyInstantiator = objenesis.getInstantiatorOf(clazz);
 			return thingyInstantiator.newInstance();
 		}
 
@@ -618,7 +621,7 @@ public class EasyBuilder {
 			return rval;
 		}
 
-		// @java.lang.Override
+		// @Override
 		public String toString() {
 			return new StringBuffer("BypassingInstantiateInstruction[sequenceId::").append(sequenceId).append("]").toString();
 		}
@@ -662,11 +665,11 @@ public class EasyBuilder {
 		 * @throws InstantiationException
 		 * @throws InvocationTargetException
 		 */
-		private Object constructInstanceWithAlternativeConstructor(Class clazz) throws IllegalAccessException, InvocationTargetException,
+		private Object constructInstanceWithAlternativeConstructor(Class<?> clazz) throws IllegalAccessException, InvocationTargetException,
 				InstantiationException {
-			Class sourceClass = clazz;
-			Class[] paramTypes = getParamTypes(args);
-			Constructor constructor = null;
+			Class<?> sourceClass = clazz;
+			Class<?>[] paramTypes = getParamTypes(args);
+			Constructor<?> constructor = null;
 			Object instance = null;
 			while (constructor == null && !Object.class.equals(sourceClass)) {
 				try {
@@ -681,7 +684,7 @@ public class EasyBuilder {
 			return instance;
 		}
 
-		// @java.lang.Override
+		@Override
 		public String toString() {
 			// TODO add args to this output
 			return new StringBuffer("ParameterizedInstantiateInstruction[sequenceId::").append(sequenceId).append("]").toString();
@@ -702,7 +705,7 @@ public class EasyBuilder {
 		float f;
 		double d;
 		boolean t;
-		Class type = null;
+		Class<? extends Object> type = null;
 
 		/**
 		 * @param fn
@@ -819,8 +822,8 @@ public class EasyBuilder {
 		 * @throws NoSuchFieldException
 		 *             Field was not found in this class hierarchy.
 		 */
-		protected Field findField(Class clazz, String fieldName) throws NoSuchFieldException {
-			Class clazz_lcl = clazz;
+		protected Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
+			Class<?> clazz_lcl = clazz;
 			Field field = null;
 			do {
 				try {
@@ -859,7 +862,7 @@ public class EasyBuilder {
 			return rval;
 		}
 
-		// @java.lang.Override
+		// @Override
 		public String toString() {
 			return new StringBuffer("setField[fieldName::").append(fieldName).append("(").append(type.getName()).append("), value::").append(getValueString())
 					.append(", sequenceId::").append(sequenceId).append("]").toString();
@@ -880,8 +883,8 @@ public class EasyBuilder {
 		}
 
 		public void invoke(EasyBuilder builder) {
-			Class clazz = builder.clazz;
-			Class[] paramTypes = getParamTypes(args);
+			Class<?> clazz = builder.clazz;
+			Class<?>[] paramTypes = getParamTypes(args);
 			Method method = null;
 			while (method == null && !Object.class.equals(clazz)) {
 				try {
@@ -897,7 +900,7 @@ public class EasyBuilder {
 			}
 		}
 
-		// @java.lang.Override
+		@Override
 		public String toString() {
 			return new StringBuffer("invokeMethod[methodName::").append(methodName).append(", sequenceId::").append(sequenceId).append("]").toString();
 		}
@@ -910,58 +913,58 @@ public class EasyBuilder {
 	 */
 	class SetPrivateFieldInstruction extends SetFieldInstruction {
 
-		Class targetClass = null;
+		Class<?> targetClass = null;
 
-		public SetPrivateFieldInstruction(String fn, Object v, Class startingClass) {
+		public SetPrivateFieldInstruction(String fn, Object v, Class<?> startingClass) {
 			super(fn, v);
 			targetClass = startingClass;
 		}
 
-		public SetPrivateFieldInstruction(String fn, boolean v, Class startingClass) {
+		public SetPrivateFieldInstruction(String fn, boolean v, Class<?> startingClass) {
 			super(fn, v);
 			targetClass = startingClass;
 		}
 
-		public SetPrivateFieldInstruction(String fn, byte v, Class startingClass) {
+		public SetPrivateFieldInstruction(String fn, byte v, Class<?> startingClass) {
 			super(fn, v);
 			targetClass = startingClass;
 		}
 
-		public SetPrivateFieldInstruction(String fn, char v, Class startingClass) {
+		public SetPrivateFieldInstruction(String fn, char v, Class<?> startingClass) {
 			super(fn, v);
 			targetClass = startingClass;
 		}
 
-		public SetPrivateFieldInstruction(String fn, short v, Class startingClass) {
+		public SetPrivateFieldInstruction(String fn, short v, Class<?> startingClass) {
 			super(fn, v);
 			targetClass = startingClass;
 		}
 
-		public SetPrivateFieldInstruction(String fn, int v, Class startingClass) {
+		public SetPrivateFieldInstruction(String fn, int v, Class<?> startingClass) {
 			super(fn, v);
 			targetClass = startingClass;
 		}
 
-		public SetPrivateFieldInstruction(String fn, long v, Class startingClass) {
+		public SetPrivateFieldInstruction(String fn, long v, Class<?> startingClass) {
 			super(fn, v);
 			targetClass = startingClass;
 		}
 
-		public SetPrivateFieldInstruction(String fn, float v, Class startingClass) {
+		public SetPrivateFieldInstruction(String fn, float v, Class<?> startingClass) {
 			super(fn, v);
 			targetClass = startingClass;
 		}
 
-		public SetPrivateFieldInstruction(String fn, double v, Class startingClass) {
+		public SetPrivateFieldInstruction(String fn, double v, Class<?> startingClass) {
 			super(fn, v);
 			targetClass = startingClass;
 		}
 
-		protected Field findField(Class clazz, String fieldName) throws NoSuchFieldException {
+		protected Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
 			return super.findField(targetClass, fieldName);
 		}
 
-		// @java.lang.Override
+		@Override
 		public String toString() {
 			return new StringBuffer("setPrivateField[fieldName::").append(fieldName).append("(").append(type.getName()).append("), value::").append(
 					getValueString()).append(", sequenceId::").append(sequenceId).append("]").toString();

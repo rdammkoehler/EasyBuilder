@@ -23,6 +23,16 @@ THE SOFTWARE.
  */
 package com.noradltd.easybuilder;
 
+import static com.noradltd.easybuilder.FloatCloseToMatcher.closeTo;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,17 +42,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import org.junit.Test;
 
+import com.noradltd.easybuilder.EasyBuilder.AssemblyInstruction;
 import com.noradltd.easybuilder.EasyBuilder.InstantiateInstruction;
 
 /**
  * @author Nilanjan Raychaundhrui, nraychaudhrui@pillartechnology.com
  * @author Rich Dammkoehler, rdammkoehler@gmail.com (NOrad Ltd.)
  */
-public class EasyBuilderTest extends TestCase {
+public class EasyBuilderTest {
 
+	@Test
 	public void testShouldReinitiateAnInstanceUsingFieldsDirectly() {
 		SomeNonJavaBean nonBean = new SomeNonJavaBean("someValue", 42);
 
@@ -54,9 +65,10 @@ public class EasyBuilderTest extends TestCase {
 			}
 		};
 		SomeNonJavaBean anotherNonBean = (SomeNonJavaBean) builder.build();
-		assertEquals(nonBean, anotherNonBean);
+		assertThat(nonBean, is(anotherNonBean));
 	}
 
+	@Test
 	public void testShouldReinitiateAnInstanceUsingFieldsDirectlyEvenWhenItsComplex() {
 		final Date today = new Date();
 		SomeParameter someParameter = new SomeParameter(today, 0.0);
@@ -80,10 +92,11 @@ public class EasyBuilderTest extends TestCase {
 		};
 		SomeNonJavaBean anotherNonBean = (SomeNonJavaBean) nonBeanBuilder.build();
 
-		assertEquals(nonBean, anotherNonBean);
-		assertEquals(someParameter.someDate, anotherNonBean.getSomeParameter().someDate);
+		assertThat(nonBean, is(anotherNonBean));
+		assertThat(someParameter.someDate, is(anotherNonBean.getSomeParameter().someDate));
 	}
 
+	@Test
 	public void testShouldInitializeSuperClassFieldsWhenInitializingChildClassInstance() {
 		Child c = new Child("child", "parent");
 		final EasyBuilder builder = new EasyBuilder(Child.class) {
@@ -94,100 +107,106 @@ public class EasyBuilderTest extends TestCase {
 			}
 		};
 		Child anotherChild = (Child) builder.build();
-		assertEquals(c.childName, anotherChild.childName);
-		assertEquals(c.parentName, anotherChild.parentName);
+		assertThat(c.childName, is(anotherChild.childName));
+		assertThat(c.parentName, is(anotherChild.parentName));
 	}
 
+	@Test
 	public void testConstructorShouldBeCalledByDefault() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ConstructorCalledClass.class);
-		// execute
+
 		ConstructorCalledClass testClass = (ConstructorCalledClass) builder.build();
-		// assert
-		Assert.assertTrue(testClass.constructorCalled);
+
+		assertThat(testClass.constructorCalled, is(true));
 	}
 
+	@Test
 	public void testConstructorShouldBeCalledAndThrowsException() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(SomeNonJavaBean.class);
-		// execute
+
 		try {
 			builder.build();
-			// assert
-			Assert.fail("Should have received an exception from the constructor.");
+
+			fail("Should have received an exception from the constructor.");
 		} catch (RuntimeException re) {
 			// OK
 		}
 	}
 
+	@Test
 	public void testConstructorByPassedWhenRequested() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ConstructorCalledClass.class) {
 			{
 				bypassConstructor();
 			}
 		};
-		// execute
+
 		ConstructorCalledClass testClass = (ConstructorCalledClass) builder.build();
-		// assert
-		Assert.assertFalse(testClass.constructorCalled);
+
+		assertThat(testClass.constructorCalled, is(false));
 	}
 
+	@Test
 	public void testNullInitializationClass_ReceiveExceptionFromUnknownClassByNullPointer() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(null);
-		// execute
+
 		try {
 			builder.build();
-			// assert
-			Assert.fail("Should have received an exception");
+
+			fail("Should have received an exception");
 		} catch (RuntimeException re) {
 			// OK
 		}
 	}
 
+	@Test
 	public void testFieldNotFoundGeneratesException() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(SomeNonJavaBean.class) {
 			{
 				bypassConstructor();
 				setField("nonExistentField", "anyvaluewilldo");
 			}
 		};
-		// execute
+
 		try {
 			builder.build();
-			// assert
-			Assert.fail("Should have received an exception");
+
+			fail("Should have received an exception");
 		} catch (RuntimeException re) {
 			// OK
 		}
 	}
 
+	@Test
 	public void testBuilderBuilderBuilds() {
-		// setup/execute
 		EasyBuilder builder = (EasyBuilder) new EasyBuilder(EasyBuilder.class) {
 			{
 				bypassConstructor();
 			}
 		}.build();
-		// assert
-		Assert.assertNotNull(builder);
+
+		assertThat(builder, is(notNullValue()));
 		try {
 			builder.build();
-			Assert.fail("The builder is uninitialized and therefore should fail to build with a NullPointerException");
+			fail("The builder is uninitialized and therefore should fail to build with a NullPointerException");
 		} catch (NullPointerException npe) {
 			// OK
 		}
 
 	}
 
+	@Test
 	public void testMultipleInstantiateIntructionsResultInSingleInstantiation() {
-		// setup
+
 		InstanceCounter.reset();
 		EasyBuilder builder = new EasyBuilder(EasyBuilder.class) {
 			{
-				List assemblyInstructions = new ArrayList();
+				List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 				assemblyInstructions.add(new BasicInstantiateInstruction());
 				assemblyInstructions.add(new BasicInstantiateInstruction());
 				assemblyInstructions.add(new BasicInstantiateInstruction());
@@ -198,19 +217,21 @@ public class EasyBuilderTest extends TestCase {
 				setField("assemblyInstructions", assemblyInstructions);
 			}
 		};
-		// execute
+
 		InstanceCounter instance = (InstanceCounter) ((EasyBuilder) builder.build()).build();
-		// assert
-		Assert.assertEquals("Instance Id should be 1", 1, instance.id);
-		Assert.assertEquals("Instance Count should be 1", 1, InstanceCounter.count);
-		Assert.assertTrue("Instance should have been constructed", instance.constructed);
+
+		assertThat("Instance Id should be 1", instance.id, is(1));
+		assertThat("Instance Count should be 1", InstanceCounter.count, is(1));
+		assertThat("Instance should have been constructed", instance.constructed, is(true));
 	}
 
-	public void testNonAssemblyInstructionAtBeginingIsResortedBehindAssemblyInstructions() throws NoSuchFieldException, IllegalAccessException {
-		// setup
+	@Test
+	public void testNonAssemblyInstructionAtBeginingIsResortedBehindAssemblyInstructions() throws NoSuchFieldException,
+			IllegalAccessException {
+
 		EasyBuilder builder = new EasyBuilder(EasyBuilder.class) {
 			{
-				List assemblyInstructions = new ArrayList();
+				List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 				assemblyInstructions.add(new SetFieldInstruction("childName", "Xanadu"));
 
 				bypassConstructor();
@@ -218,22 +239,26 @@ public class EasyBuilderTest extends TestCase {
 				setField("assemblyInstructions", assemblyInstructions);
 			}
 		};
-		// execute
+
 		EasyBuilder result = (EasyBuilder) builder.build();
 		result.bypassConstructor();
-		// assert
-		List assemblyInstructions = (List) getPrivateFieldValue("assemblyInstructions", result, EasyBuilder.class);
-		Assert.assertTrue(assemblyInstructions.get(0) instanceof EasyBuilder.InstantiateInstruction);
-		EasyBuilder.InstantiateInstruction instantiateInstruction = (InstantiateInstruction) assemblyInstructions.get(0);
-		Assert.assertTrue(instantiateInstruction instanceof EasyBuilder.BypassingInstantiateInstruction);
+
+		@SuppressWarnings("unchecked")
+		List<AssemblyInstruction> assemblyInstructions = (List<AssemblyInstruction>) getPrivateFieldValue(
+				"assemblyInstructions", result, EasyBuilder.class);
+		assertThat(assemblyInstructions.get(0) instanceof EasyBuilder.InstantiateInstruction, is(true));
+		EasyBuilder.InstantiateInstruction instantiateInstruction = (InstantiateInstruction) assemblyInstructions
+				.get(0);
+		assertThat(instantiateInstruction instanceof EasyBuilder.BypassingInstantiateInstruction, is(true));
 	}
 
+	@Test
 	public void testMultipleInstantiateIntructionsWithByPassResultsInSingleBypassingInstantiation() {
-		// setup
+
 		InstanceCounter.reset();
 		EasyBuilder builder = new EasyBuilder(EasyBuilder.class) {
 			{
-				List assemblyInstructions = new ArrayList();
+				List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 				assemblyInstructions.add(new BasicInstantiateInstruction());
 				assemblyInstructions.add(new BasicInstantiateInstruction());
 				assemblyInstructions.add(new BasicInstantiateInstruction());
@@ -244,20 +269,21 @@ public class EasyBuilderTest extends TestCase {
 				setField("assemblyInstructions", assemblyInstructions);
 			}
 		};
-		// execute
+
 		InstanceCounter instance = (InstanceCounter) ((EasyBuilder) builder.build()).build();
-		// assert
-		Assert.assertEquals("Instance Id should be 0", 0, instance.id);
-		Assert.assertEquals("Instance Count should be 0", 0, InstanceCounter.count);
-		Assert.assertFalse("Instance should not have been constructed", instance.constructed);
+
+		assertThat("Instance Id should be 0", instance.id, is(0));
+		assertThat("Instance Count should be 0", InstanceCounter.count, is(0));
+		assertThat("Instance should not have been constructed", instance.constructed, is(false));
 	}
 
+	@Test
 	public void testUnorderedIntructionsResultsInInstantiationFirst() {
-		// setup
+
 		InstanceCounter.reset();
-		final List assemblyInstructions = new ArrayList();
 		EasyBuilder builder = new EasyBuilder(EasyBuilder.class) {
 			{
+				List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 				assemblyInstructions.add(new SetFieldInstruction("id", 6));
 				assemblyInstructions.add(new SetFieldInstruction("id", 4));
 				assemblyInstructions.add(new BypassingInstantiateInstruction());
@@ -267,39 +293,41 @@ public class EasyBuilderTest extends TestCase {
 				setField("assemblyInstructions", assemblyInstructions);
 			}
 		};
-		// execute
+
 		InstanceCounter instance = (InstanceCounter) ((EasyBuilder) builder.build()).build();
-		// assert
-		Assert.assertEquals("Instance Id should be 2", 2, instance.id);
-		Assert.assertEquals("Instance Count should be 0", 0, InstanceCounter.count);
-		Assert.assertFalse("Instance should not have been constructed", instance.constructed);
+
+		assertThat("Instance Id should be 2", instance.id, is(2));
+		assertThat("Instance Count should be 0", InstanceCounter.count, is(0));
+		assertThat("Instance should not have been constructed", instance.constructed, is(false));
 	}
 
+	@Test
 	public void testUnInitializedBuilderIsSafe() {
-		// setup
+
 		InstanceCounter.reset();
 		EasyBuilder builder = new EasyBuilder(EasyBuilder.class) {
 			{
-				List assemblyInstructions = new ArrayList();
+				List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 				bypassConstructor();
 				setField("clazz", InstanceCounter.class);
 				setField("assemblyInstructions", assemblyInstructions);
 			}
 		};
-		// execute
+
 		InstanceCounter instance = (InstanceCounter) ((EasyBuilder) builder.build()).build();
-		// assert
-		Assert.assertEquals("Instance Id should be 1", 1, instance.id);
-		Assert.assertEquals("Instance Count should be 1", 1, InstanceCounter.count);
-		Assert.assertTrue("Instance should have been constructed", instance.constructed);
+
+		assertThat("Instance Id should be 1", instance.id, is(1));
+		assertThat("Instance Count should be 1", InstanceCounter.count, is(1));
+		assertThat("Instance should have been constructed", instance.constructed, is(true));
 	}
 
+	@Test
 	public void testMultipleInstantiateIntructionsWithAllByPassResultsInSingleBypassingInstantiation() {
-		// setup
+
 		InstanceCounter.reset();
 		EasyBuilder builder = new EasyBuilder(EasyBuilder.class) {
 			{
-				List assemblyInstructions = new ArrayList();
+				List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 				assemblyInstructions.add(new BypassingInstantiateInstruction());
 				assemblyInstructions.add(new BypassingInstantiateInstruction());
 
@@ -308,16 +336,17 @@ public class EasyBuilderTest extends TestCase {
 				setField("assemblyInstructions", assemblyInstructions);
 			}
 		};
-		// execute
+
 		InstanceCounter instance = (InstanceCounter) ((EasyBuilder) builder.build()).build();
-		// assert
-		Assert.assertEquals("Instance Id should be 0", 0, instance.id);
-		Assert.assertEquals("Instance Count should be 0", 0, InstanceCounter.count);
-		Assert.assertFalse("Instance should not have been constructed", instance.constructed);
+
+		assertThat("Instance Id should be 0", instance.id, is(0));
+		assertThat("Instance Count should be 0", InstanceCounter.count, is(0));
+		assertThat("Instance should not have been constructed", instance.constructed, is(false));
 	}
 
+	@Test
 	public void testBuildeAClassWithOneOfEachPrimitive() {
-		// setup
+
 		final char c = 'a';
 		final byte b = 1;
 		final short s = 2;
@@ -339,23 +368,24 @@ public class EasyBuilderTest extends TestCase {
 				setField("t", t);
 			}
 		};
-		// execute
+
 		OneOfEach instance = (OneOfEach) builder.build();
-		// assert
-		Assert.assertEquals(c, instance.c);
-		Assert.assertEquals(b, instance.b);
-		Assert.assertEquals(s, instance.s);
-		Assert.assertEquals(i, instance.i);
-		Assert.assertEquals(l, instance.l);
-		Assert.assertEquals(f, instance.f, 0.001);
-		Assert.assertEquals(d, instance.d, 0.001);
-		Assert.assertEquals(t, instance.t);
+
+		assertThat(instance.c, is(c));
+		assertThat(instance.b, is(b));
+		assertThat(instance.s, is(s));
+		assertThat(instance.i, is(i));
+		assertThat(instance.l, is(l));
+		assertThat(instance.f, is(closeTo(f, 0.001F)));
+		assertThat(instance.d, is(closeTo(d, 0.001)));
+		assertThat(instance.t, is(t));
 	}
 
+	@Test
 	public void testSetWithMap() {
-		// setup
+
 		Object obj = new Object();
-		final Map map = new HashMap();
+		final Map<String, Object> map = new HashMap<String, Object>();
 		map.put("obj", obj);
 
 		EasyBuilder builder = new EasyBuilder(OneOfEachPlus.class) {
@@ -364,17 +394,19 @@ public class EasyBuilderTest extends TestCase {
 				setFields(map);
 			}
 		};
-		// execute
+
 		OneOfEachPlus instance = (OneOfEachPlus) builder.build();
-		// assert
-		Assert.assertEquals(obj, instance.obj);
+
+		assertThat(instance.obj, is(obj));
 	}
 
 	/**
-	 * @noinspection UnnecessaryBoxing,CachedNumberConstructorCall,BooleanConstructorCall
+	 * @noinspection 
+	 *               UnnecessaryBoxing,CachedNumberConstructorCall,BooleanConstructorCall
 	 */
+	@Test
 	public void testSetWithMapWithPrimitives() {
-		// setup
+
 		char c = 'a';
 		byte b = 1;
 		short s = 2;
@@ -384,7 +416,7 @@ public class EasyBuilderTest extends TestCase {
 		double d = 42.3;
 		boolean t = true;
 		Object obj = new Object();
-		final Map map = new HashMap();
+		final Map<String, Object> map = new HashMap<String, Object>();
 		map.put("c", new Character(c));
 		map.put("b", new Byte(b));
 		map.put("s", new Short(s));
@@ -401,23 +433,24 @@ public class EasyBuilderTest extends TestCase {
 				setFields(map);
 			}
 		};
-		// execute
+
 		OneOfEachPlus instance = (OneOfEachPlus) builder.build();
-		// assert
-		Assert.assertEquals(c, instance.c);
-		Assert.assertEquals(b, instance.b);
-		Assert.assertEquals(s, instance.s);
-		Assert.assertEquals(i, instance.i);
-		Assert.assertEquals(l, instance.l);
-		Assert.assertEquals(f, instance.f, 0.001);
-		Assert.assertEquals(d, instance.d, 0.001);
-		Assert.assertEquals(t, instance.t);
-		Assert.assertEquals(obj, instance.obj);
+
+		assertThat(instance.c, is(c));
+		assertThat(instance.b, is(b));
+		assertThat(instance.s, is(s));
+		assertThat(instance.i, is(i));
+		assertThat(instance.l, is(l));
+		assertThat(instance.f, is(closeTo(f, 0.001F)));
+		assertThat(instance.d, is(closeTo(d, 0.001)));
+		assertThat(instance.t, is(t));
+		assertThat(instance.obj, is(obj));
 	}
 
 	// just to show that it can be done
+	@Test
 	public void testDateSets() {
-		// setup
+
 		final Calendar cal = Calendar.getInstance();
 		cal.set(1970, 0, 1, 0, 0, 0); // epoch
 		final Date date = Calendar.getInstance().getTime();
@@ -428,279 +461,299 @@ public class EasyBuilderTest extends TestCase {
 				setField("date", date);
 			}
 		};
-		// execute
+
 		Dates instance = (Dates) builder.build();
-		// assert
-		Assert.assertEquals(cal, instance.cal);
-		Assert.assertEquals(date, instance.date);
+
+		assertThat(instance.cal, is(cal));
+		assertThat(instance.date, is(date));
 	}
 
+	@Test
 	public void testPrivateMethodCalled() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(PMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("privateMethod", null);
 			}
 		};
-		// execute
+
 		PMethods instance = (PMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.privateCalled);
+
+		assertThat(instance.privateCalled, is(true));
 	}
 
+	@Test
 	public void testProtectedMethodCalled() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(PMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("protectedMethod", null);
 			}
 		};
-		// execute
+
 		PMethods instance = (PMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.protectedCalled);
+
+		assertThat(instance.protectedCalled, is(true));
 	}
 
+	@Test
 	public void testPackageMethodCalled() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(PMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("packageMethod", null);
 			}
 		};
-		// execute
+
 		PMethods instance = (PMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.packageCalled);
+
+		assertThat(instance.packageCalled, is(true));
 	}
 
+	@Test
 	public void testPublicMethodCalled() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(PMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("publicMethod", null);
 			}
 		};
-		// execute
+
 		PMethods instance = (PMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.publicCalled);
+
+		assertThat(instance.publicCalled, is(true));
 	}
 
+	@Test
 	public void testFinalMethodCalled() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(PMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("finalMethod", null);
 			}
 		};
-		// execute
+
 		PMethods instance = (PMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.finalCalled);
+
+		assertThat(instance.finalCalled, is(true));
 	}
 
+	@Test
 	public void testStaticMethodCalled() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(PMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("staticMethod", null);
 			}
 		};
-		// execute
+
 		builder.build();
-		// assert
-		Assert.assertTrue(PMethods.staticCalled);
+
+		assertThat(PMethods.staticCalled, is(true));
 	}
 
+	@Test
 	public void testReturnMethodCalled() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(PMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("returnMethod", null);
 			}
 		};
-		// execute
+
 		PMethods instance = (PMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.returnCalled);
+
+		assertThat(instance.returnCalled, is(true));
 	}
 
+	@Test
 	public void testNoDefaultConstructorClassWithoutBypassThrowsException() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(NoDefConst.class);
-		// execute
+
 		try {
 			builder.build();
-			// assert
-			Assert.fail("Expected InstantiationExcpetion");
+
+			fail("Expected InstantiationExcpetion");
 		} catch (Exception e) {
-			Assert.assertTrue(e.getCause() instanceof InstantiationException);
+			assertThat(e.getCause() instanceof InstantiationException, is(true));
 		}
 	}
 
+	@Test
 	public void testNoDefaultConstructorClassWithBypassDoesNotThrowException() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(NoDefConst.class) {
 			{
 				bypassConstructor();
 			}
 		};
-		// execute
+
 		NoDefConst instance = (NoDefConst) builder.build();
-		// assert
-		Assert.assertFalse(instance.primaryConstCalled);
+
+		assertThat(instance.primaryConstCalled, is(false));
 	}
 
+	@Test
 	public void testPrivateMethodCalledWhenExtended() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ExtensionOfPMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("privateMethod", null);
 			}
 		};
-		// execute
+
 		ExtensionOfPMethods instance = (ExtensionOfPMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.privateCalled);
+
+		assertThat(instance.privateCalled, is(true));
 	}
 
+	@Test
 	public void testProtectedMethodCalledWhenExtended() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ExtensionOfPMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("protectedMethod", null);
 			}
 		};
-		// execute
+
 		ExtensionOfPMethods instance = (ExtensionOfPMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.protectedCalled);
+
+		assertThat(instance.protectedCalled, is(true));
 	}
 
+	@Test
 	public void testPackageMethodCalledWhenExtended() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ExtensionOfPMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("packageMethod", null);
 			}
 		};
-		// execute
+
 		ExtensionOfPMethods instance = (ExtensionOfPMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.packageCalled);
+
+		assertThat(instance.packageCalled, is(true));
 	}
 
+	@Test
 	public void testPublicMethodCalledWhenExtended() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ExtensionOfPMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("publicMethod", null);
 			}
 		};
-		// execute
+
 		ExtensionOfPMethods instance = (ExtensionOfPMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.publicCalled);
+
+		assertThat(instance.publicCalled, is(true));
 	}
 
+	@Test
 	public void testFinalMethodCalledWhenExtended() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ExtensionOfPMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("finalMethod", null);
 			}
 		};
-		// execute
+
 		ExtensionOfPMethods instance = (ExtensionOfPMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.finalCalled);
+
+		assertThat(instance.finalCalled, is(true));
 	}
 
+	@Test
 	public void testStaticMethodCalledWhenExtended() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ExtensionOfPMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("staticMethod", null);
 			}
 		};
-		// execute
+
 		builder.build();
-		// assert
-		Assert.assertTrue(PMethods.staticCalled);
+
+		assertThat(PMethods.staticCalled, is(true));
 	}
 
+	@Test
 	public void testReturnMethodCalledWhenExtended() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ExtensionOfPMethods.class) {
 			{
 				bypassConstructor();
 				invokeMethod("returnMethod", null);
 			}
 		};
-		// execute
+
 		ExtensionOfPMethods instance = (ExtensionOfPMethods) builder.build();
-		// assert
-		Assert.assertTrue(instance.returnCalled);
+
+		assertThat(instance.returnCalled, is(true));
 	}
 
+	@Test
 	public void testUseAlternateConstructor() {
-		// setup
+
 		final Object[] args = new Object[] { new Object() };
 		EasyBuilder builder = new EasyBuilder(AltConstructor.class) {
 			{
 				useAlternateConstructor(args);
 			}
 		};
-		// execute
+
 		AltConstructor instance = (AltConstructor) builder.build();
-		// assert
-		Assert.assertFalse(instance.defaultWasCalled);
-		Assert.assertTrue(instance.altWasCalled);
-		Assert.assertSame(args[0], instance.obj);
+
+		assertThat(instance.defaultWasCalled, is(false));
+		assertThat(instance.altWasCalled, is(true));
+		assertThat(instance.obj, is(sameInstance(args[0])));
 	}
 
+	@Test
 	public void testUseAlternateConstructorThroughExtensionClassReturnsSuperType() {
-		// setup
+
 		final Object[] args = new Object[] { new Object() };
 		EasyBuilder builder = new EasyBuilder(ExtendsAltConstructor.class) {
 			{
 				useAlternateConstructor(args);
 			}
 		};
-		// execute
+
 		Object obj = builder.build();
-		// assert
-		Assert.assertTrue("unexpected type " + obj.getClass().getName(), obj instanceof AltConstructor);
+
+		assertThat("unexpected type " + obj.getClass().getName(), obj instanceof AltConstructor, is(true));
 		AltConstructor instance = (AltConstructor) obj;
-		Assert.assertFalse(instance.defaultWasCalled);
-		Assert.assertTrue(instance.altWasCalled);
-		Assert.assertSame(args[0], instance.obj);
+		assertThat(instance.defaultWasCalled, is(false));
+		assertThat(instance.altWasCalled, is(true));
+		assertThat(instance.obj, is(sameInstance(args[0])));
 		// no need to assert that the substance field isn't there, we know that
 		// by type.
 	}
 
-	private Object getPrivateFieldValue(String fieldName, Object targetObject, Class clazz) throws NoSuchFieldException, IllegalAccessException {
+	private Object getPrivateFieldValue(String fieldName, Object targetObject, Class<?> clazz)
+			throws NoSuchFieldException, IllegalAccessException {
 		Field field = clazz.getDeclaredField(fieldName);
 		field.setAccessible(true);
 		return field.get(targetObject);
 	}
 
+	@Test
 	public void testFieldMaskingShouldSetChildTypesField() throws IllegalAccessException, NoSuchFieldException {
-		// setup
+
 		final Object obj = new Object();
 		EasyBuilder builder = new EasyBuilder(ExtendsSuperType.class) {
 			{
@@ -709,15 +762,17 @@ public class EasyBuilderTest extends TestCase {
 
 			}
 		};
-		// execute
+
 		ExtendsSuperType instance = (ExtendsSuperType) builder.build();
-		// assert
-		Assert.assertSame(obj, getPrivateFieldValue("x", instance, ExtendsSuperType.class));
-		Assert.assertNull(getPrivateFieldValue("x", instance, SuperType.class));
+
+		assertThat(getPrivateFieldValue("x", instance, ExtendsSuperType.class), is(sameInstance(obj)));
+		assertThat(getPrivateFieldValue("x", instance, SuperType.class), is(nullValue()));
 	}
 
-	public void testSetPrivateFieldValueBypassingFieldMaskingShouldSetParentTypesField() throws IllegalAccessException, NoSuchFieldException {
-		// setup
+	@Test
+	public void testSetPrivateFieldValueBypassingFieldMaskingShouldSetParentTypesField() throws IllegalAccessException,
+			NoSuchFieldException {
+
 		final Object obj = new Object();
 		EasyBuilder builder = new EasyBuilder(ExtendsSuperType.class) {
 			{
@@ -725,15 +780,16 @@ public class EasyBuilderTest extends TestCase {
 				setField("x", obj, SuperType.class);
 			}
 		};
-		// execute
+
 		ExtendsSuperType instance = (ExtendsSuperType) builder.build();
-		// assert
-		Assert.assertSame(obj, getPrivateFieldValue("x", instance, SuperType.class));
-		Assert.assertNull(getPrivateFieldValue("x", instance, ExtendsSuperType.class));
+
+		assertThat(getPrivateFieldValue("x", instance, SuperType.class), is(sameInstance(obj)));
+		assertThat(getPrivateFieldValue("x", instance, ExtendsSuperType.class), is(nullValue()));
 	}
 
+	@Test
 	public void testSetPrivatePrimitiveFieldValue() throws NoSuchFieldException, IllegalAccessException {
-		// setup
+
 		final char c = 'a';
 		final byte b = 1;
 		final short s = 2;
@@ -755,22 +811,25 @@ public class EasyBuilderTest extends TestCase {
 				setField("t", t);
 			}
 		};
-		// execute
+
 		OneOfEachPrivates instance = (OneOfEachPrivates) builder.build();
-		// assert
-		Assert.assertEquals(c, ((Character) getPrivateFieldValue("c", instance, OneOfEachPrivates.class)).charValue());
-		Assert.assertEquals(b, ((Byte) getPrivateFieldValue("b", instance, OneOfEachPrivates.class)).byteValue());
-		Assert.assertEquals(s, ((Short) getPrivateFieldValue("s", instance, OneOfEachPrivates.class)).shortValue());
-		Assert.assertEquals(i, ((Integer) getPrivateFieldValue("i", instance, OneOfEachPrivates.class)).intValue());
-		Assert.assertEquals(l, ((Long) getPrivateFieldValue("l", instance, OneOfEachPrivates.class)).longValue());
-		Assert.assertEquals(f, ((Float) getPrivateFieldValue("f", instance, OneOfEachPrivates.class)).floatValue(), 0.001);
-		Assert.assertEquals(d, ((Double) getPrivateFieldValue("d", instance, OneOfEachPrivates.class)).doubleValue(), 0.001);
-		Assert.assertEquals(t, ((Boolean) getPrivateFieldValue("t", instance, OneOfEachPrivates.class)).booleanValue());
+
+		assertThat(((Character) getPrivateFieldValue("c", instance, OneOfEachPrivates.class)).charValue(), is(c));
+		assertThat(((Byte) getPrivateFieldValue("b", instance, OneOfEachPrivates.class)).byteValue(), is(b));
+		assertThat(((Short) getPrivateFieldValue("s", instance, OneOfEachPrivates.class)).shortValue(), is(s));
+		assertThat(((Integer) getPrivateFieldValue("i", instance, OneOfEachPrivates.class)).intValue(), is(i));
+		assertThat(((Long) getPrivateFieldValue("l", instance, OneOfEachPrivates.class)).longValue(), is(l));
+		assertThat(((Float) getPrivateFieldValue("f", instance, OneOfEachPrivates.class)).floatValue(),
+				is(closeTo(f, 0.001F)));
+		assertThat(((Double) getPrivateFieldValue("d", instance, OneOfEachPrivates.class)).doubleValue(),
+				is(closeTo(d, 0.001)));
+		assertThat(((Boolean) getPrivateFieldValue("t", instance, OneOfEachPrivates.class)).booleanValue(), is(t));
 	}
 
+	@Test
 	public void testSetParentClassPrivatePrimitiveFieldValue() throws NoSuchFieldException, IllegalAccessException {
 		// ExtendsOneOfEachPrivates
-		// setup
+
 		final char c = 'a';
 		final byte b = 1;
 		final short s = 2;
@@ -792,25 +851,28 @@ public class EasyBuilderTest extends TestCase {
 				setField("t", t, OneOfEachPrivates.class);
 			}
 		};
-		// execute
+
 		ExtendsOneOfEachPrivates instance = (ExtendsOneOfEachPrivates) builder.build();
-		// assert
-		Assert.assertEquals(c, ((Character) getPrivateFieldValue("c", instance, OneOfEachPrivates.class)).charValue());
-		Assert.assertEquals(b, ((Byte) getPrivateFieldValue("b", instance, OneOfEachPrivates.class)).byteValue());
-		Assert.assertEquals(s, ((Short) getPrivateFieldValue("s", instance, OneOfEachPrivates.class)).shortValue());
-		Assert.assertEquals(i, ((Integer) getPrivateFieldValue("i", instance, OneOfEachPrivates.class)).intValue());
-		Assert.assertEquals(l, ((Long) getPrivateFieldValue("l", instance, OneOfEachPrivates.class)).longValue());
-		Assert.assertEquals(f, ((Float) getPrivateFieldValue("f", instance, OneOfEachPrivates.class)).floatValue(), 0.001);
-		Assert.assertEquals(d, ((Double) getPrivateFieldValue("d", instance, OneOfEachPrivates.class)).doubleValue(), 0.001);
-		Assert.assertEquals(t, ((Boolean) getPrivateFieldValue("t", instance, OneOfEachPrivates.class)).booleanValue());
+
+		assertThat(((Character) getPrivateFieldValue("c", instance, OneOfEachPrivates.class)).charValue(), is(c));
+		assertThat(((Byte) getPrivateFieldValue("b", instance, OneOfEachPrivates.class)).byteValue(), is(b));
+		assertThat(((Short) getPrivateFieldValue("s", instance, OneOfEachPrivates.class)).shortValue(), is(s));
+		assertThat(((Integer) getPrivateFieldValue("i", instance, OneOfEachPrivates.class)).intValue(), is(i));
+		assertThat(((Long) getPrivateFieldValue("l", instance, OneOfEachPrivates.class)).longValue(), is(l));
+		assertThat(((Float) getPrivateFieldValue("f", instance, OneOfEachPrivates.class)).floatValue(),
+				is(closeTo(f, 0.001F)));
+		assertThat(((Double) getPrivateFieldValue("d", instance, OneOfEachPrivates.class)).doubleValue(),
+				is(closeTo(d, 0.001)));
+		assertThat(((Boolean) getPrivateFieldValue("t", instance, OneOfEachPrivates.class)).booleanValue(), is(t));
 	}
 
 	/**
 	 * @throws IllegalAccessException
 	 * @throws NoSuchFieldException
 	 */
+	@Test
 	public void testConfirmSetMethodOrderIsMaintained() throws IllegalAccessException, NoSuchFieldException {
-		// setup
+
 		final char c = 'a';
 		final byte b = 1;
 		final short s = 2;
@@ -819,7 +881,7 @@ public class EasyBuilderTest extends TestCase {
 		final float f = 12.01f;
 		final double d = 42.3;
 		final boolean t = true;
-		final List assemblyInstructions = new ArrayList();
+		final List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 		EasyBuilder builder = new EasyBuilder(EasyBuilder.class) {
 			{
 				assemblyInstructions.add(new BasicInstantiateInstruction());
@@ -838,23 +900,26 @@ public class EasyBuilderTest extends TestCase {
 				Collections.shuffle(assemblyInstructions);
 			}
 		};
-		// execute
+
 		((EasyBuilder) builder.build()).build();
-		// assert
+
 		boolean inOrder = true;
 		int lastId = -1;
 		for (int idx = 0; inOrder && idx < assemblyInstructions.size(); idx++) {
-			EasyBuilder.AssemblyInstruction instruction = (EasyBuilder.AssemblyInstruction) assemblyInstructions.get(idx);
-			Integer seqNum = (Integer) getPrivateFieldValue("sequenceId", instruction, EasyBuilder.BaseInstruction.class);
+			EasyBuilder.AssemblyInstruction instruction = (EasyBuilder.AssemblyInstruction) assemblyInstructions
+					.get(idx);
+			Integer seqNum = (Integer) getPrivateFieldValue("sequenceId", instruction,
+					EasyBuilder.BaseInstruction.class);
 			inOrder = seqNum.intValue() > lastId;
 			lastId = seqNum.intValue();
 		}
-		Assert.assertTrue(inOrder);
+		assertThat(inOrder, is(true));
 	}
 
+	@Test
 	public void testConfirmMethodInvokeOrderIsMaintained() throws IllegalAccessException, NoSuchFieldException {
-		// setup
-		final List assemblyInstructions = new ArrayList();
+
+		final List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 		EasyBuilder builder = new EasyBuilder(EasyBuilder.class) {
 			{
 				assemblyInstructions.add(new BasicInstantiateInstruction());
@@ -868,23 +933,26 @@ public class EasyBuilderTest extends TestCase {
 				Collections.shuffle(assemblyInstructions);
 			}
 		};
-		// execute
+
 		((EasyBuilder) builder.build()).build();
-		// assert
+
 		boolean inOrder = true;
 		int lastId = -1;
 		for (int idx = 0; inOrder && idx < assemblyInstructions.size(); idx++) {
-			EasyBuilder.AssemblyInstruction instruction = (EasyBuilder.AssemblyInstruction) assemblyInstructions.get(idx);
-			Integer seqNum = (Integer) getPrivateFieldValue("sequenceId", instruction, EasyBuilder.BaseInstruction.class);
+			EasyBuilder.AssemblyInstruction instruction = (EasyBuilder.AssemblyInstruction) assemblyInstructions
+					.get(idx);
+			Integer seqNum = (Integer) getPrivateFieldValue("sequenceId", instruction,
+					EasyBuilder.BaseInstruction.class);
 			inOrder = seqNum.intValue() > lastId;
 			lastId = seqNum.intValue();
 		}
-		Assert.assertTrue(inOrder);
+		assertThat(inOrder, is(true));
 	}
 
+	@Test
 	public void testConfirmSetsAndMethodInvoksOrderIsMaintained() throws IllegalAccessException, NoSuchFieldException {
 		// MethodsAndMembers
-		// setup
+
 		final char c = 'a';
 		final byte b = 1;
 		final short s = 2;
@@ -893,7 +961,7 @@ public class EasyBuilderTest extends TestCase {
 		final float f = 12.01f;
 		final double d = 42.3;
 		final boolean t = true;
-		final List assemblyInstructions = new ArrayList();
+		final List<AssemblyInstruction> assemblyInstructions = new ArrayList<AssemblyInstruction>();
 		EasyBuilder builder = new EasyBuilder(EasyBuilder.class) {
 			{
 				assemblyInstructions.add(new BasicInstantiateInstruction());
@@ -915,52 +983,56 @@ public class EasyBuilderTest extends TestCase {
 				Collections.shuffle(assemblyInstructions);
 			}
 		};
-		// execute
+
 		((EasyBuilder) builder.build()).build();
-		// assert
+
 		boolean inOrder = true;
 		int lastId = -1;
 		for (int idx = 0; inOrder && idx < assemblyInstructions.size(); idx++) {
-			EasyBuilder.AssemblyInstruction instruction = (EasyBuilder.AssemblyInstruction) assemblyInstructions.get(idx);
-			Integer seqNum = (Integer) getPrivateFieldValue("sequenceId", instruction, EasyBuilder.BaseInstruction.class);
+			EasyBuilder.AssemblyInstruction instruction = (EasyBuilder.AssemblyInstruction) assemblyInstructions
+					.get(idx);
+			Integer seqNum = (Integer) getPrivateFieldValue("sequenceId", instruction,
+					EasyBuilder.BaseInstruction.class);
 			inOrder = seqNum.intValue() > lastId;
 			lastId = seqNum.intValue();
 		}
-		Assert.assertTrue(inOrder);
+		assertThat(inOrder, is(true));
 	}
 
+	@Test
 	public void testMethodInvokeCausesException() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(ExeceptionalExecution.class) {
 			{
 				invokeMethod("method", null);
 			}
 		};
-		// execute
+
 		try {
 			builder.build();
-			Assert.fail("should have gotten a runtime exception");
+			fail("should have gotten a runtime exception");
 		} catch (RuntimeException re) {
-			// assert
-			Assert.assertEquals("", re.getMessage());
-			Assert.assertNotNull(re.getCause());
+
+			assertThat(re.getMessage(), isEmptyString());
+			assertThat(re.getCause(), is(notNullValue()));
 		}
 	}
 
+	@Test
 	public void testInvokingNonExistentMethodsIsHarmless() {
-		// setup
+
 		EasyBuilder builder = new EasyBuilder(Parent.class) {
 			{
 				bypassConstructor();
 				invokeMethod("nonExistentMethod", null);
 			}
 		};
-		// execute
+
 		try {
 			builder.build();
 		} catch (Throwable t) {
-			// assert
-			Assert.fail("no exception should be thrown if the named method does not exist");
+
+			fail("no exception should be thrown if the named method does not exist");
 		}
 	}
 
@@ -1033,6 +1105,7 @@ class PMethods {
 	static boolean staticCalled = false;
 	boolean returnCalled = false;
 
+	@SuppressWarnings("unused")
 	private void privateMethod() {
 		privateCalled = true;
 	}
@@ -1053,10 +1126,12 @@ class PMethods {
 		finalCalled = true;
 	}
 
+	@SuppressWarnings("unused")
 	static private void staticMethod() {
 		staticCalled = true;
 	}
 
+	@SuppressWarnings("unused")
 	private Object returnMethod() {
 		returnCalled = true;
 		return new Object();
@@ -1098,10 +1173,12 @@ class ExtendsAltConstructor extends AltConstructor {
 }
 
 class SuperType {
+	@SuppressWarnings("unused")
 	private Object x;
 }
 
 class ExtendsSuperType extends SuperType {
+	@SuppressWarnings("unused")
 	private Object x;
 }
 
@@ -1169,13 +1246,21 @@ class ConstructorCalledClass {
 }
 
 class OneOfEachPrivates {
+	@SuppressWarnings("unused")
 	private char c;
+	@SuppressWarnings("unused")
 	private byte b;
+	@SuppressWarnings("unused")
 	private short s;
+	@SuppressWarnings("unused")
 	private int i;
+	@SuppressWarnings("unused")
 	private long l;
+	@SuppressWarnings("unused")
 	private float f;
+	@SuppressWarnings("unused")
 	private double d;
+	@SuppressWarnings("unused")
 	private boolean t;
 }
 
@@ -1183,8 +1268,8 @@ class ExtendsOneOfEachPrivates extends OneOfEachPrivates {
 }
 
 class ExeceptionalExecution {
+	@SuppressWarnings("unused")
 	private void method() {
 		throw new RuntimeException();
 	}
 }
-
