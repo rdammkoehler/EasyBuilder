@@ -33,7 +33,7 @@
 			<email>rpd@noradltd.com</email>
 			<url></url>
 			<organization>NOrad Ltd.</organization>
-			<organizationUrl>http://www.noradltd.com</organizationUrl>
+			<organizationUrl>https://www.noradltd.com</organizationUrl>
 			<roles>
 				<role>developer</role>
 			</roles>
@@ -88,8 +88,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.1</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>17</source>
+					<target>17</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -125,35 +125,35 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.objenesis</groupId>
 			<artifactId>objenesis</artifactId>
-			<version>2.1</version>
+			<version>3.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjrt</artifactId>
-			<version>1.8.0</version>
+			<version>1.9.9.1</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.7</version>
+			<version>2.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
-			<version>1.7.7</version>
+			<version>2.0.3</version>
 		</dependency>
 	</dependencies>
 	<profiles></profiles>
 	<url>https://github.com/rdammkoehler/EasyBuilder</url>
 	<organization>
 		<name>NOrad Ltd.</name>
-		<url>http://www.noradltd.com</url>
+		<url>https://www.noradltd.com</url>
 	</organization>
 </project>
