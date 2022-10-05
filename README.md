@@ -18,12 +18,12 @@ Installation:
 ===============================
 Add the following jars to your classpath;
 -	easybuilder-1.0.jar
--	objenesis-1.1.jar
+-	objenesis-3.2.jar
 
 Optionally you may include
--	aspectjrt-1.5.4.jar
--	slf4j-api-1.5.8.jar
--	slf4j-simple-1.5.8.jar
+-	aspectjrt-1.9.9.1.jar
+-	slf4j-api-2.0.3.jar
+-	slf4j-simple-2.0.3.jar
 
 Usage:
 ===============================
